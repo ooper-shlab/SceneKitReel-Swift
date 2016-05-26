@@ -168,13 +168,13 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
             gestureRecognizers += sceneView.gestureRecognizers ?? []
             
             // add a tap gesture recognizer
-            let tapGesture = UITapGestureRecognizer(target: self, action: "handleTap:")
+            let tapGesture = UITapGestureRecognizer(target: self, action: #selector(AAPLGameViewController.handleTap(_:)))
             
             // add a pan gesture recognizer
-            let panGesture = UIPanGestureRecognizer(target: self, action: "handlePan:")
+            let panGesture = UIPanGestureRecognizer(target: self, action: #selector(AAPLGameViewController.handlePan(_:)))
             
             // add a double tap gesture recognizer
-            let doubleTapGesture = UITapGestureRecognizer(target: self, action: "handleDoubleTap:")
+            let doubleTapGesture = UITapGestureRecognizer(target: self, action: #selector(AAPLGameViewController.handleDoubleTap(_:)))
             doubleTapGesture.numberOfTapsRequired = 2
             
             tapGesture.requireGestureRecognizerToFail(panGesture)
@@ -495,7 +495,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
     
     // switch to the next introduction step
     private func nextIntroductionStep() {
-        _introductionStep++
+        _introductionStep += 1
         
         //show wall
         _mainWall.hidden = false
@@ -562,11 +562,12 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
     }
     
     // tilt the camera based on an offset
-    func tiltCameraWithOffset(var offset: CGPoint) {
+    func tiltCameraWithOffset(_offset: CGPoint) {
         if _introductionStep != 0 {
             return
         }
         
+        var offset = _offset
         offset.x += _initialOffset.x
         offset.y += _initialOffset.y
         
@@ -687,7 +688,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
             My.boxes.append(ball)
         }
         
-        My.count++
+        My.count += 1
         
         var index = My.count % 3
         if My.count == 1 || (My.count&7) == 7 {
@@ -784,7 +785,8 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
             self._boxes.append(box)
             
             // ensure we stop firing
-            if --remainingCount < 0 {
+            remainingCount -= 1
+            if remainingCount < 0 {
                 dispatch_source_cancel(self._timer!)
             }
             
@@ -994,10 +996,11 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
     private let SPRITE_SIZE: CGFloat = 256
     
     // add a color "splash" at the specified location in the SKScene used as a material
-    private func addPaintAtLocation(var p: CGPoint, color: SKColor) {
+    private func addPaintAtLocation(_p: CGPoint, color: SKColor) {
         if let skScene = _torus.geometry!.firstMaterial!.diffuse.contents as? SKScene {
             
             //update the contents of skScene by adding a splash of "color" at p (normalized [0, 1])
+            var p = _p
             p.x *= SPRITE_SIZE
             p.y *= SPRITE_SIZE
             
@@ -1205,7 +1208,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
     //MARK: - Shaders
     
     private func showNextShaderStage() {
-        _shaderStage++
+        _shaderStage += 1
         
         //retrieve the node that owns the shader modifiers
         guard let node = _shadedNode else {fatalError()}
@@ -1409,7 +1412,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         }
         
         self.orderOutStep(_step)
-        _step++
+        _step += 1
         self.presentStep(_step)
     }
     
@@ -1419,7 +1422,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         }
         
         self.orderOutStep(_step)
-        _step--
+        _step -= 1
         
         SCNTransaction.begin()
         SCNTransaction.setAnimationDuration(0.75)
