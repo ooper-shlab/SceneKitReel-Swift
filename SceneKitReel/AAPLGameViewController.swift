@@ -6,7 +6,7 @@
 //
 //
 /*
- Copyright (C) 2015 Apple Inc. All Rights Reserved.
+ Copyright (C) 2017 Apple Inc. All Rights Reserved.
  See LICENSE.txt for this sample’s licensing information
 
  Abstract:
@@ -37,8 +37,8 @@ private let MAX_FIRE: CGFloat = 25.0
 private let MAX_SMOKE: CGFloat = 20.0
 
 // utility function
-private func randFloat<F: FloatComputable>(min: F, _ max: F) -> F {
-    return min + (max - min) * F(rand()) / F(RAND_MAX)
+private func randFloat<F: FloatingPoint>(_ min: F, _ max: F) -> F {
+    return min + (max - min) * F(arc4random()) / F(UInt32.max)
 }
 
 private let FACTOR = SCNVectorFloat(2.2)
@@ -111,15 +111,16 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
     private var _cameraBaseOrientation: SCNVector3 = SCNVector3()
     private var _initialOffset: CGPoint = CGPoint()
     private var _lastOffset: CGPoint = CGPoint()
-    private var _cameraHandleTransforms: [SCNMatrix4] = Array(count: SLIDE_COUNT, repeatedValue: SCNMatrix4())
-    private var _cameraOrientationTransforms: [SCNMatrix4] = Array(count: SLIDE_COUNT, repeatedValue: SCNMatrix4())
-    private var _timer: dispatch_source_t?
+    private var _cameraHandleTransforms: [SCNMatrix4] = Array(repeating: SCNMatrix4(), count: SLIDE_COUNT)
+    private var _cameraOrientationTransforms: [SCNMatrix4] = Array(repeating: SCNMatrix4(), count: SLIDE_COUNT)
+    //private var _timer: DispatchSource?
+    private var _timer: DispatchSourceTimer?
     
     
     private var _preventNext: Bool = false
     
     #if os(iOS)
-    override func viewDidAppear(animated: Bool) {
+    override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         self.setup()
     }
@@ -135,11 +136,11 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         let sceneView = self.view as! SCNView
         
         //redraw forever
-        sceneView.playing = true
+        sceneView.isPlaying = true
         sceneView.loops = true
         sceneView.showsStatistics = true
         
-        sceneView.backgroundColor = SKColor.blackColor()
+        sceneView.backgroundColor = .black
         
         //setup ivars
         _boxes = []
@@ -177,7 +178,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
             let doubleTapGesture = UITapGestureRecognizer(target: self, action: #selector(AAPLGameViewController.handleDoubleTap(_:)))
             doubleTapGesture.numberOfTapsRequired = 2
             
-            tapGesture.requireGestureRecognizerToFail(panGesture)
+            tapGesture.require(toFail: panGesture)
             
             gestureRecognizers.append(doubleTapGesture)
             gestureRecognizers.append(tapGesture)
@@ -222,13 +223,13 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         _cameraNode.camera = SCNCamera()
         _cameraNode.camera!.zFar = 800
         #if os(iOS)
-            if UIDevice.currentDevice().userInterfaceIdiom == .Phone {
+            if UIDevice.current.userInterfaceIdiom == .phone {
                 _cameraNode.camera!.yFov = 55
             } else {
-                _cameraNode.camera!.yFov = 75
+                _cameraNode.camera!.xFov = 75
             }
         #else
-            _cameraNode.camera!.yFov = 75
+            _cameraNode.camera!.xFov = 75
         #endif
         
         _cameraHandleTransforms[0] = _cameraNode.transform
@@ -237,7 +238,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         _ambientLightNode = SCNNode()
         _ambientLightNode.light = SCNLight()
         
-        _ambientLightNode.light!.type = SCNLightTypeAmbient
+        _ambientLightNode.light!.type = .ambient
         _ambientLightNode.light!.color = SKColor(white: 0.3, alpha: 1.0)
         
         _scene.rootNode.addChildNode(_ambientLightNode)
@@ -248,10 +249,10 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         _spotLightParentNode.position = SCNVector3Make(0, 90, 20)
         
         _spotLightNode = SCNNode()
-        _spotLightNode.rotation = SCNVector4Make(1,0,0,-SCNVectorFloat(M_PI_4))
+        _spotLightNode.rotation = SCNVector4Make(1,0,0,-.pi/4)
         
         _spotLightNode.light = SCNLight()
-        _spotLightNode.light!.type = SCNLightTypeSpot
+        _spotLightNode.light!.type = .spot
         _spotLightNode.light!.color = SKColor(white: 1.0, alpha: 1.0)
         _spotLightNode.light!.castsShadow = true
         _spotLightNode.light!.shadowColor = SKColor(white: 0, alpha: 0.5)
@@ -276,12 +277,12 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         _floorNode.geometry = floor
         _floorNode.geometry!.firstMaterial!.diffuse.contents = "wood.png"
         _floorNode.geometry!.firstMaterial!.locksAmbientWithDiffuse = true
-        _floorNode.geometry!.firstMaterial!.diffuse.wrapS = SCNWrapMode.Repeat
-        _floorNode.geometry!.firstMaterial!.diffuse.wrapT = SCNWrapMode.Repeat
-        _floorNode.geometry!.firstMaterial!.diffuse.mipFilter = SCNFilterMode.Nearest
-        _floorNode.geometry!.firstMaterial!.doubleSided = false
+        _floorNode.geometry!.firstMaterial!.diffuse.wrapS = .repeat
+        _floorNode.geometry!.firstMaterial!.diffuse.wrapT = .repeat
+        _floorNode.geometry!.firstMaterial!.diffuse.mipFilter = .nearest
+        _floorNode.geometry!.firstMaterial!.isDoubleSided = false
         
-        _floorNode.physicsBody = SCNPhysicsBody.staticBody()
+        _floorNode.physicsBody = .static()
         _floorNode.physicsBody!.restitution = 1.0
         
         _scene.rootNode.addChildNode(_floorNode)
@@ -291,22 +292,22 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         // create the wall geometry
         let wallGeometry = SCNPlane(width: 800, height: 200)
         wallGeometry.firstMaterial!.diffuse.contents = "wallPaper.png"
-        wallGeometry.firstMaterial!.diffuse.contentsTransform = SCNMatrix4Mult(SCNMatrix4MakeScale(8, 2, 1), SCNMatrix4MakeRotation(SCNVectorFloat(M_PI_4), 0, 0, 1))
-        wallGeometry.firstMaterial!.diffuse.wrapS = SCNWrapMode.Repeat
-        wallGeometry.firstMaterial!.diffuse.wrapT = SCNWrapMode.Repeat
-        wallGeometry.firstMaterial!.doubleSided = false
+        wallGeometry.firstMaterial!.diffuse.contentsTransform = SCNMatrix4Mult(SCNMatrix4MakeScale(8, 2, 1), SCNMatrix4MakeRotation(.pi/4, 0, 0, 1))
+        wallGeometry.firstMaterial!.diffuse.wrapS = .repeat
+        wallGeometry.firstMaterial!.diffuse.wrapT = .repeat
+        wallGeometry.firstMaterial!.isDoubleSided = false
         wallGeometry.firstMaterial!.locksAmbientWithDiffuse = true
         
         let wallWithBaseboardNode = SCNNode(geometry: wallGeometry)
         wallWithBaseboardNode.position = SCNVector3Make(200, 100, -20)
-        wallWithBaseboardNode.physicsBody = SCNPhysicsBody.staticBody()
+        wallWithBaseboardNode.physicsBody = .static()
         wallWithBaseboardNode.physicsBody!.restitution = 1.0
         wallWithBaseboardNode.castsShadow = false
         
         let baseboardNode = SCNNode(geometry: SCNBox(width: 800, height: 8, length: 0.5, chamferRadius: 0))
         baseboardNode.geometry!.firstMaterial!.diffuse.contents = "baseboard.jpg"
-        baseboardNode.geometry!.firstMaterial!.diffuse.wrapS = SCNWrapMode.Repeat
-        baseboardNode.geometry!.firstMaterial!.doubleSided = false
+        baseboardNode.geometry!.firstMaterial!.diffuse.wrapS = .repeat
+        baseboardNode.geometry!.firstMaterial!.isDoubleSided = false
         baseboardNode.geometry!.firstMaterial!.locksAmbientWithDiffuse = true
         baseboardNode.position = SCNVector3Make(0, -wallWithBaseboardNode.position.y + 4, 0.5)
         baseboardNode.castsShadow = false
@@ -322,19 +323,22 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         //back
         var wallNode = wallWithBaseboardNode.clone()
         wallNode.opacity = 0
-        wallNode.physicsBody = SCNPhysicsBody.staticBody()
+        wallNode.physicsBody = .static()
         wallNode.physicsBody!.restitution = 1.0
         wallNode.physicsBody!.categoryBitMask = 1 << 2
         wallNode.castsShadow = false
+        if #available(OSX 10.11, iOS 9.0, *) {
+            wallNode.physicsBody!.contactTestBitMask = ~0
+        }
         
-        wallNode.position = SCNVector3Make(0, 100, 40)
-        wallNode.rotation = SCNVector4Make(0, 1, 0, SCNVectorFloat(M_PI))
+        wallNode.position = SCNVector3Make(0, 100, 0)
+        wallNode.rotation = SCNVector4Make(0, 1, 0, .pi)
         _scene.rootNode.addChildNode(wallNode)
         
         //left
         wallNode = wallWithBaseboardNode.clone()
         wallNode.position = SCNVector3Make(-120, 100, 40)
-        wallNode.rotation = SCNVector4Make(0, 1, 0, SCNVectorFloat(M_PI_2))
+        wallNode.rotation = SCNVector4Make(0, 1, 0, .pi/2)
         _scene.rootNode.addChildNode(wallNode)
         
         
@@ -342,14 +346,14 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         wallNode = wallNode.clone()
         wallNode.opacity = 0
         wallNode.position = SCNVector3Make(120, 100, 40)
-        wallNode.rotation = SCNVector4Make(0, 1, 0, -SCNVectorFloat(M_PI_2))
+        wallNode.rotation = SCNVector4Make(0, 1, 0, -.pi/2)
         _invisibleWallForPhysicsSlide = wallNode
         
         //right (the actual wall on the right)
         wallNode = wallWithBaseboardNode.clone()
         wallNode.physicsBody = nil
         wallNode.position = SCNVector3Make(600, 100, 40)
-        wallNode.rotation = SCNVector4Make(0, 1, 0, -SCNVectorFloat(M_PI_2))
+        wallNode.rotation = SCNVector4Make(0, 1, 0, -.pi/2)
         _scene.rootNode.addChildNode(wallNode)
         
         //top
@@ -359,20 +363,20 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         wallNode.opacity = 1
         wallNode.position = SCNVector3Make(200, 200, 0)
         wallNode.scale = SCNVector3Make(1, 10, 1)
-        wallNode.rotation = SCNVector4Make(1, 0, 0, SCNVectorFloat(M_PI_2))
+        wallNode.rotation = SCNVector4Make(1, 0, 0, .pi/2)
         _scene.rootNode.addChildNode(wallNode)
         
-        _mainWall.hidden = true //hide at first (save some milliseconds)
+        _mainWall.isHidden = true //hide at first (save some milliseconds)
     }
     
     private func setupIntroEnvironment() {
         _introductionStep = 1
         
         // configure the lighting for the introduction (dark lighting)
-        _ambientLightNode.light?.color = SKColor.blackColor()
-        _spotLightNode.light!.color = SKColor.blackColor()
+        _ambientLightNode.light?.color = SKColor.black
+        _spotLightNode.light!.color = SKColor.black
         _spotLightNode.position = SCNVector3Make(50, 90, -50)
-        _spotLightNode.eulerAngles = SCNVector3Make(-SCNVectorFloat(M_PI_2)*0.75, SCNVectorFloat(M_PI_4)*0.5, 0)
+        _spotLightNode.eulerAngles = SCNVector3Make(-.pi/2*0.75, .pi/4*0.5, 0)
         
         //put all texts under this node to remove all at once later
         _introNodeGroup = SCNNode()
@@ -381,7 +385,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         let LOGO_SIZE: CGFloat = 70
         //### let TITLE_SIZE = (TEXT_SCALE*0.45)
         let sceneKitLogo = SCNNode(geometry: SCNPlane(width: LOGO_SIZE, height: LOGO_SIZE))
-        sceneKitLogo.geometry!.firstMaterial!.doubleSided = true
+        sceneKitLogo.geometry!.firstMaterial!.isDoubleSided = true
         sceneKitLogo.geometry!.firstMaterial!.diffuse.contents = "SceneKit.png"
         sceneKitLogo.geometry!.firstMaterial!.emission.contents = "SceneKit.png"
         _sceneKitLogo = sceneKitLogo
@@ -395,7 +399,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         let position = SCNVector3Make(200, 0, 200)
         
         _cameraNode.position = SCNVector3Make(200, -20, position.z+150)
-        _cameraNode.eulerAngles = SCNVector3Make(-SCNVectorFloat(M_PI_2)*0.06, 0, 0)
+        _cameraNode.eulerAngles = SCNVector3Make(-.pi/2*0.06, 0, 0)
         
         /* hierarchy
         shipHandle
@@ -403,9 +407,9 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         |_ shipPivot
         |_ ship */
         let modelScene = SCNScene(named: "ship.dae", inDirectory: "assets.scnassets/models", options: nil)!
-        _shipNode = modelScene.rootNode.childNodeWithName("Aircraft", recursively: true)
+        _shipNode = modelScene.rootNode.childNode(withName: "Aircraft", recursively: true)
         
-        let shipMesh = _shipNode!.childNodeWithName("mesh", recursively: true)! //###
+        let shipMesh = _shipNode!.childNode(withName: "mesh", recursively: true)! //###
         //shipMesh.geometry!.firstMaterial!.fresnelExponent = 1.0
         shipMesh.geometry!.firstMaterial!.emission.intensity = 0.5
         shipMesh.renderingOrder = -3
@@ -424,22 +428,22 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         
         //animate ship
         _shipNode!.removeAllActions()
-        _shipNode!.rotation = SCNVector4Make(0, 0, 1, SCNVectorFloat(M_PI_4)*0.5)
+        _shipNode!.rotation = SCNVector4Make(0, 0, 1, .pi/4*0.5)
         
         //make spotlight relative to the ship
         let newPosition = SCNVector3Make(50, 100, 0)
-        let oldTransform = _shipPivot!.convertTransform(SCNMatrix4Identity, fromNode: _spotLightNode)
+        let oldTransform = _shipPivot!.convertTransform(SCNMatrix4Identity, from: _spotLightNode)
         
         _spotLightNode.removeFromParentNode()
         _spotLightNode.transform = oldTransform
         _shipPivot!.addChildNode(_spotLightNode)
         
         _spotLightNode.position = newPosition // will animate implicitly
-        _spotLightNode.eulerAngles = SCNVector3Make(-SCNVectorFloat(M_PI_2), 0, 0)
+        _spotLightNode.eulerAngles = SCNVector3Make(-.pi/2, 0, 0)
         _spotLightNode.light!.spotOuterAngle = 120
         
-        _shipPivot!.eulerAngles = SCNVector3Make(0, SCNVectorFloat(M_PI_2), 0)
-        let action = SCNAction.sequence([SCNAction.repeatActionForever(SCNAction.rotateByX(0, y: CGFloat(M_PI), z: 0, duration: 2))])
+        _shipPivot!.eulerAngles = SCNVector3Make(0, .pi/2, 0)
+        let action = SCNAction.sequence([.repeatForever(.rotateBy(x: 0, y: .pi, z: 0, duration: 2))])
         _shipPivot!.runAction(action)
         
         let animation = CABasicAnimation(keyPath: "position.x")
@@ -452,7 +456,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         animation.timeOffset = -animation.duration*0.5
         shipXTranslate.addAnimation(animation, forKey: nil)
         
-        let emitter = _shipNode!.childNodeWithName("emitter", recursively: true)!
+        let emitter = _shipNode!.childNode(withName: "emitter", recursively: true)!
         let ps = SCNParticleSystem(named: "reactor.scnp", inDirectory: "assets.scnassets/particles")!
         emitter.addParticleSystem(ps)
         _shipHandle!.position = SCNVector3Make(_shipHandle!.position.x, _shipHandle!.position.y, _shipHandle!.position.z-50)
@@ -461,10 +465,10 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         
         //wait, then fade in light
         SCNTransaction.begin()
-        SCNTransaction.setAnimationDuration(1.0)
-        SCNTransaction.setCompletionBlock {
+        SCNTransaction.animationDuration = 1.0
+        SCNTransaction.completionBlock = {
             SCNTransaction.begin()
-            SCNTransaction.setAnimationDuration(2.5)
+            SCNTransaction.animationDuration = 2.5
             
             self._shipHandle!.position = SCNVector3Make(self._shipHandle!.position.x+500, self._shipHandle!.position.y, self._shipHandle!.position.z)
             
@@ -498,11 +502,11 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         _introductionStep += 1
         
         //show wall
-        _mainWall.hidden = false
+        _mainWall.isHidden = false
         
         SCNTransaction.begin()
-        SCNTransaction.setAnimationDuration(1.0)
-        SCNTransaction.setCompletionBlock{
+        SCNTransaction.animationDuration = 1.0
+        SCNTransaction.completionBlock = {
             
             if self._introductionStep == 0 {
                 //We did finish introduction step
@@ -526,7 +530,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
             
             //restore spot light config
             _spotLightNode.light!.spotOuterAngle = 70
-            let oldTransform = _spotLightParentNode.convertTransform(SCNMatrix4Identity, fromNode: _spotLightNode)
+            let oldTransform = _spotLightParentNode.convertTransform(SCNMatrix4Identity, from: _spotLightNode)
             _spotLightNode.removeFromParentNode()
             _spotLightNode.transform = oldTransform
             
@@ -550,20 +554,20 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
     //restore the default camera orientation and position
     private func restoreCameraAngle() {
         //reset drag offset
-        _initialOffset = CGPointMake(0, 0)
+        _initialOffset = CGPoint(x: 0, y: 0)
         _lastOffset = _initialOffset
         
         //restore default camera
         SCNTransaction.begin()
-        SCNTransaction.setAnimationDuration(0.5)
-        SCNTransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut))
+        SCNTransaction.animationDuration = 0.5
+        SCNTransaction.animationTimingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut)
         _cameraHandle.eulerAngles = SCNVector3Make(0, 0, 0)
         SCNTransaction.commit()
     }
     
     // tilt the camera based on an offset
-    func tiltCameraWithOffset(_offset: CGPoint) {
-        if _introductionStep != 0 {
+    func tiltCameraWithOffset(_ _offset: CGPoint) {
+        guard _introductionStep == 0 else {
             return
         }
         
@@ -594,13 +598,13 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
             _initialOffset.y -= tr.y
             _lastOffset.y -= tr.y
         }
-        if rx < -CGFloat(M_PI_2) {
-            rx = -CGFloat(M_PI_2)
+        if rx < -.pi/2 {
+            rx = -.pi/2
             _initialOffset.y -= tr.y
             _lastOffset.y -= tr.y
         }
         
-        let MAX_RY = CGFloat(M_PI_4*1.5)
+        let MAX_RY = CGFloat(.pi/4*1.5)
         if ry > MAX_RY {
             ry = MAX_RY
             _initialOffset.x -= tr.x
@@ -622,15 +626,15 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
     //MARK: UIKit configuration
     
     #if os(iOS)
-    override func shouldAutorotate() -> Bool {
+    override var shouldAutorotate : Bool {
         return true
     }
     
-    override func supportedInterfaceOrientations() -> UIInterfaceOrientationMask {
-        if UIDevice.currentDevice().userInterfaceIdiom == .Phone {
-            return .AllButUpsideDown
+    override var supportedInterfaceOrientations : UIInterfaceOrientationMask {
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            return .allButUpsideDown
         } else {
-            return .All
+            return .all
         }
     }
     
@@ -647,7 +651,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
     
     // return a new physically based box at the specified position
     // sometimes generate a ball instead of a box for more variety
-    private func boxAtPosition(position: SCNVector3) -> SCNNode {
+    private func boxAtPosition(_ position: SCNVector3) -> SCNNode {
         struct My {
             static var boxes: [SCNNode] = []
             static var count = 0
@@ -659,8 +663,8 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
             var box = SCNNode()
             box.geometry = SCNBox(width: BOX_W, height: BOX_W, length: BOX_W, chamferRadius: 0.1)
             box.geometry!.firstMaterial!.diffuse.contents = "WoodCubeA.jpg"
-            box.geometry!.firstMaterial!.diffuse.mipFilter = SCNFilterMode.Linear
-            box.physicsBody = SCNPhysicsBody.dynamicBody()
+            box.geometry!.firstMaterial!.diffuse.mipFilter = .linear
+            box.physicsBody = .dynamic()
             
             My.boxes.append(box)
             
@@ -679,11 +683,11 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
             let ball = SCNNode()
             let sphere = SCNSphere(radius: BOX_W * 0.75)
             ball.geometry = sphere
-            ball.geometry!.firstMaterial!.diffuse.wrapS = SCNWrapMode.Repeat
+            ball.geometry!.firstMaterial!.diffuse.wrapS = .repeat
             ball.geometry!.firstMaterial!.diffuse.contents = "ball.jpg"
             ball.geometry!.firstMaterial!.reflective.contents = "envmap.jpg"
             ball.geometry!.firstMaterial!.fresnelExponent = 1.0
-            ball.physicsBody = SCNPhysicsBody.dynamicBody()
+            ball.physicsBody = .dynamic()
             ball.physicsBody!.restitution = 0.9
             My.boxes.append(ball)
         }
@@ -703,11 +707,11 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
     
     //apply an explosion force at the specified location to the specified nodes
     //remove from the nodes from the scene graph is removeOnCompletion is set to yes
-    private func explosionAt(center: SCNVector3, receivers nodes: [SCNNode], removeOnCompletion: Bool) {
+    private func explosionAt(_ center: SCNVector3, receivers nodes: [SCNNode], removeOnCompletion: Bool) {
         var c = SCNVector3ToGLKVector3(center)
         
         for node in nodes {
-            let p = SCNVector3ToGLKVector3(node.presentationNode.position)
+            let p = SCNVector3ToGLKVector3(node.presentation.position)
             
             c.v.1 = removeOnCompletion ? -20 : -90
             c.v.2 = removeOnCompletion ? 0 : 50
@@ -730,10 +734,10 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
             direction = GLKVector3Normalize(direction)
             direction = GLKVector3MultiplyScalar(direction, Float(FACTOR) * force / max(20.0, distance))
             
-            node.physicsBody?.applyForce(SCNVector3FromGLKVector3(direction), atPosition: removeOnCompletion ? SCNVector3Zero : SCNVector3Make(randFloat(-0.2, 0.2), randFloat(-0.2, 0.2), randFloat(-0.2, 0.2)) , impulse: true)
+            node.physicsBody?.applyForce(SCNVector3FromGLKVector3(direction), at: removeOnCompletion ? SCNVector3Zero : SCNVector3Make(randFloat(-0.2, 0.2), randFloat(-0.2, 0.2), randFloat(-0.2, 0.2)) , asImpulse: true)
             
             if removeOnCompletion {
-                node.runAction(SCNAction.sequence([SCNAction.waitForDuration(1.0), SCNAction.fadeOutWithDuration(0.125)]))
+                node.runAction(.sequence([.wait(duration: 1.0), .fadeOut(duration: 0.125)]))
             }
         }
     }
@@ -752,19 +756,21 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         scene.rootNode.addChildNode(_invisibleWallForPhysicsSlide)
         
         // drop rigid bodies cubes
-        let intervalTime = UInt64(Double(NSEC_PER_SEC) * 10.0 / Double(count))
+        let intervalTime = Int(Double(NSEC_PER_SEC) * 10.0 / Double(count))
         
-        let queue = dispatch_get_main_queue()
-        _timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue)
-        dispatch_source_set_timer(_timer!, dispatch_time(DISPATCH_TIME_NOW, Int64(NSEC_PER_SEC)), intervalTime, 0); // every ms
+        let queue = DispatchQueue.main
+        _timer = DispatchSource.makeTimerSource(flags: [], queue: queue)
+//        _timer!.setTimer(start: DispatchTime.now() + Double(Int64(NSEC_PER_SEC)) / Double(NSEC_PER_SEC), interval: intervalTime, leeway: 0); // every ms
+        //DispatchTimeInterval
+        _timer!.scheduleRepeating(deadline: DispatchTime.now() + 1.0, interval: .nanoseconds(intervalTime), leeway: .seconds(0)) // every ms
         
         var remainingCount = count
         var right = false
         
-        dispatch_source_set_event_handler(_timer!) {
+        _timer!.setEventHandler {
             
             if self._step > 1 {
-                dispatch_source_cancel(self._timer!)
+                self._timer!.cancel()
                 return
             }
             
@@ -787,13 +793,13 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
             // ensure we stop firing
             remainingCount -= 1
             if remainingCount < 0 {
-                dispatch_source_cancel(self._timer!)
+                self._timer!.cancel()
             }
             
             right = !right
         }
         
-        dispatch_resume(_timer!)
+        _timer!.resume()
     }
     
     //remove physics slide
@@ -816,25 +822,25 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         
         //add truck
         let fireTruckScene = SCNScene(named: "firetruck.dae", inDirectory: "assets.scnassets/models/", options: nil)!
-        let fireTruck = fireTruckScene.rootNode.childNodeWithName("firetruck", recursively: true)!
-        let emitter = fireTruck.childNodeWithName("emitter", recursively: true)!
-        _handle = fireTruck.childNodeWithName("handle", recursively: true)
+        let fireTruck = fireTruckScene.rootNode.childNode(withName: "firetruck", recursively: true)!
+        let emitter = fireTruck.childNode(withName: "emitter", recursively: true)!
+        _handle = fireTruck.childNode(withName: "handle", recursively: true)
         
         fireTruck.position = SCNVector3Make(120, 10, 0);
         fireTruck.position = SCNVector3Make(120, 10, 0)
         fireTruck.scale = SCNVector3Make(0.2, 0.2, 0.2)
-        fireTruck.rotation = SCNVector4Make(0, 1, 0, SCNVectorFloat(M_PI_2))
+        fireTruck.rotation = SCNVector4Make(0, 1, 0, .pi/2)
         
         _scene.rootNode.addChildNode(fireTruck)
         
         //add fire container
         let fireContainerScene = SCNScene(named: "bac.dae", inDirectory: "assets.scnassets/models/", options: nil)!
-        _fireContainer = fireContainerScene.rootNode.childNodeWithName("box", recursively: true)!
+        _fireContainer = fireContainerScene.rootNode.childNode(withName: "box", recursively: true)!
         _fireContainer!.scale = SCNVector3Make(0.5, 0.25, 0.25)
         _scene.rootNode.addChildNode(_fireContainer!)
         
         //preload it to avoid frame drop
-        (self.view as! SCNView).prepareObject(_scene, shouldAbortBlock: nil)
+        (self.view as! SCNView).prepare(_scene, shouldAbortBlock: nil)
         
         _fireTruck = fireTruck
         
@@ -845,13 +851,13 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         colliderNode.position = SCNVector3Make(60, 260, 5)
         _scene.rootNode.addChildNode(colliderNode)
         
-        let moveIn = SCNAction.moveByX(0, y: -215, z: 0, duration: 1.0)
-        moveIn.timingMode = SCNActionTimingMode.EaseOut
-        colliderNode.runAction(SCNAction.sequence([SCNAction.waitForDuration(2), moveIn]))
+        let moveIn = SCNAction.moveBy(x: 0, y: -215, z: 0, duration: 1.0)
+        moveIn.timingMode = SCNActionTimingMode.easeOut
+        colliderNode.runAction(.sequence([.wait(duration: 2), moveIn]))
         
         let animation = CABasicAnimation(keyPath: "eulerAngles")
-        animation.fromValue = NSValue(SCNVector3: SCNVector3Make(0, 0, 0))
-        animation.toValue = NSValue(SCNVector3: SCNVector3Make(0, 0, 2*SCNVectorFloat(M_PI)))
+        animation.fromValue = NSValue(scnVector3: SCNVector3Make(0, 0, 0))
+        animation.toValue = NSValue(scnVector3: SCNVector3Make(0, 0, 2 * .pi))
         animation.beginTime = CACurrentMediaTime() + 0.5
         animation.duration = 2
         animation.repeatCount = MAXFLOAT
@@ -882,10 +888,10 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         ps.colliderNodes = [_floorNode!, colliderNode]
         emitter.addParticleSystem(ps)
         
-        let tr = SCNAction.moveBy(SCNVector3Make(60, 0, 0), duration: 1)
-        tr.timingMode = .EaseInEaseOut
+        let tr = SCNAction.move(by: SCNVector3Make(60, 0, 0), duration: 1)
+        tr.timingMode = .easeInEaseOut
         
-        _cameraHandle.runAction(SCNAction.sequence([SCNAction.waitForDuration(2), tr, SCNAction.runBlock{node in
+        _cameraHandle.runAction(.sequence([.wait(duration: 2), tr, .run{node in
             ps.birthRate = 300
             }]))
     }
@@ -906,14 +912,14 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
     //MARK: -
     //MARK: PhysicsFields
     
-    private func moveEmitterTo(p: CGPoint) {
+    private func moveEmitter(to p: CGPoint) {
         let scnView = self.view as! SCNView
         let pTmp = scnView.projectPoint(SCNVector3Make(0, 0, 50))
         var p3d = scnView.unprojectPoint(SCNVector3Make(SCNVectorFloat(p.x), SCNVectorFloat(p.y), pTmp.z))
         p3d.z = 50
         p3d.y = max(p3d.y, 5)
         _fieldOwner?.position = p3d
-        _fieldOwner?.physicsField!.strength = 200000.0
+        _fieldOwner?.physicsField!.strength = 10000.0
     }
     
     
@@ -922,17 +928,17 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         let dz: SCNVectorFloat = 50
         
         SCNTransaction.begin()
-        SCNTransaction.setAnimationDuration(0.75)
+        SCNTransaction.animationDuration = 0.75
         _spotLightNode.light!.color = SKColor(white: 0.5, alpha: 1.0)
-        _ambientLightNode.light!.color = SKColor.blackColor()
+        _ambientLightNode.light!.color = SKColor.black
         SCNTransaction.commit()
         
         //remove gravity for this slide
         _scene.physicsWorld.gravity = SCNVector3Zero
         
         //move camera
-        let tr = SCNAction.moveBy(SCNVector3Make(0, 0, dz), duration: 1)
-        tr.timingMode = .EaseInEaseOut
+        let tr = SCNAction.move(by: SCNVector3Make(0, 0, dz), duration: 1)
+        tr.timingMode = .easeInEaseOut
         _cameraHandle.runAction(tr)
         
         //add particles
@@ -943,8 +949,8 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         
         ps.particleColor = SKColor(red: 0.8, green: 0.0, blue: 0.0, alpha: 1.0)
         ps.particleColorVariation = SCNVector4Make(0.3, 0.2, 0.3, 0.0)
-        ps.sortingMode = SCNParticleSortingMode.Distance
-        ps.blendMode = SCNParticleBlendMode.Alpha
+        ps.sortingMode = .distance
+        ps.blendMode = .alpha
         let cubeMap = ["right.jpg", "left.jpg", "top.jpg", "bottom.jpg", "front.jpg", "back.jpg"]
         ps.particleImage = cubeMap
         ps.fresnelExponent = 2
@@ -959,7 +965,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         _fieldOwner = SCNNode()
         _fieldOwner!.position = SCNVector3Make(_cameraHandle.position.x, 50, dz+5)
         
-        let field = SCNPhysicsField.radialGravityField()
+        let field = SCNPhysicsField.radialGravity()
         field.halfExtent = SCNVector3Make(100, 100, 100)
         field.minimumDistance = 20.0
         field.falloffExponent = 0
@@ -972,7 +978,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
     //remove physics field slide
     private func orderOutPhysicsFields() {
         SCNTransaction.begin()
-        SCNTransaction.setAnimationDuration(0.75)
+        SCNTransaction.animationDuration = 0.75
         _spotLightNode.light!.color = SKColor(white: 1.0, alpha: 1.0)
         _ambientLightNode.light!.color = SKColor(white: 0.3, alpha: 1.0)
         SCNTransaction.commit()
@@ -980,7 +986,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         //move camera
         let dz: SCNVectorFloat = 50
         SCNTransaction.begin()
-        SCNTransaction.setAnimationDuration(0.75)
+        SCNTransaction.animationDuration = 0.75
         _cameraHandle.position = SCNVector3Make(_cameraHandle.position.x, _cameraHandle.position.y, _cameraHandle.position.z - dz)
         SCNTransaction.commit()
         
@@ -996,7 +1002,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
     private let SPRITE_SIZE: CGFloat = 256
     
     // add a color "splash" at the specified location in the SKScene used as a material
-    private func addPaintAtLocation(_p: CGPoint, color: SKColor) {
+    private func addPaintAtLocation(_ _p: CGPoint, color: SKColor) {
         if let skScene = _torus.geometry!.firstMaterial!.diffuse.contents as? SKScene {
             
             //update the contents of skScene by adding a splash of "color" at p (normalized [0, 1])
@@ -1009,12 +1015,15 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
             node.xScale = 0.33
             
             let subNode = SKSpriteNode(imageNamed: "splash.png")
-            subNode.zRotation = randFloat(0.0, 2.0 * CGFloat(M_PI))
+            subNode.zRotation = randFloat(0.0, 2.0 * .pi)
             subNode.color = color
             subNode.colorBlendFactor = 1
             
             node.addChild(subNode)
             skScene.addChild(node)
+            
+            //remove color splash at some point
+            node.run(.sequence([.wait(forDuration: 5), .removeFromParent()]));
             
             if p.x < 16 {
                 node = node.copy() as! SKNode
@@ -1031,27 +1040,23 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
     }
     
     // physics contact delegate
-    func physicsWorld(world: SCNPhysicsWorld, didBeginContact contact: SCNPhysicsContact) {
+    func physicsWorld(_ world: SCNPhysicsWorld, didBegin contact: SCNPhysicsContact) {
         var ball: SCNNode? = nil
         var other: SCNNode? = nil
         
-        if contact.nodeA.physicsBody!.type == .Dynamic {
+        if contact.nodeA.physicsBody!.type == .dynamic {
             ball = contact.nodeA
             other = contact.nodeB
-        } else if contact.nodeB.physicsBody!.type == .Dynamic {
+        } else if contact.nodeB.physicsBody!.type == .dynamic {
             ball = contact.nodeB
             other = contact.nodeA
         }
         
         if let ball = ball {
-            dispatch_async(dispatch_get_main_queue()) {
-                ball.removeFromParentNode()
-            }
-            
             let plokCopy = _plok.copy() as! SCNParticleSystem
             plokCopy.particleImage = _plok.particleImage; // to workaround an bug in seed #1
             plokCopy.particleColor = ball.geometry!.firstMaterial!.diffuse.contents as! SKColor
-            _scene.addParticleSystem(plokCopy, withTransform: SCNMatrix4MakeTranslation(contact.contactPoint.x, contact.contactPoint.y, contact.contactPoint.z))
+            _scene.addParticleSystem(plokCopy, transform: SCNMatrix4MakeTranslation(contact.contactPoint.x, contact.contactPoint.y, contact.contactPoint.z))
             
             if other !== _torus {
                 let node = _splashNode.clone()
@@ -1068,9 +1073,9 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
                 My.eps += 0.0002
                 node.position = SCNVector3Make(contact.contactPoint.x, contact.contactPoint.y, _mainWall.position.z + My.eps)
                 
-                node.runAction(SCNAction.sequence([
-                    SCNAction.fadeOutWithDuration(1.5),
-                    SCNAction.removeFromParentNode()
+                node.runAction(.sequence([
+                    .fadeOut(duration: 1.5),
+                    .removeFromParentNode()
                     ]))
                 _scene.rootNode.addChildNode(node)
                 
@@ -1080,14 +1085,16 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
                 let pointA = SCNVector3Make(contact.contactPoint.x, contact.contactPoint.y, contact.contactPoint.z+20)
                 let pointB = SCNVector3Make(contact.contactPoint.x, contact.contactPoint.y, contact.contactPoint.z-20)
                 
-                let results = scnview.scene!.rootNode.hitTestWithSegmentFromPoint(pointA, toPoint: pointB, options: [SCNHitTestRootNodeKey: _torus])
+                let results = scnview.scene!.rootNode.hitTestWithSegment(from: pointA, to: pointB, options: [SCNHitTestOption.rootNode.rawValue: _torus])
                 
                 if !results.isEmpty {
                     let hit = results[0]
-                    self.addPaintAtLocation(hit.textureCoordinatesWithMappingChannel(0), color: plokCopy.particleColor)
+                    self.addPaintAtLocation(hit.textureCoordinates(withMappingChannel: 0), color: plokCopy.particleColor)
                     
                 }
             }
+            
+            ball.removeFromParentNode()
         }
     }
     
@@ -1095,7 +1102,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
     private func showSpriteKitSlide() {
         //place camera
         SCNTransaction.begin()
-        SCNTransaction.setAnimationDuration(2.0)
+        SCNTransaction.animationDuration = 2.0
         _cameraHandle.position = SCNVector3Make(_cameraHandle.position.x+200, 60, 0)
         SCNTransaction.commit()
         
@@ -1109,7 +1116,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         _torus = SCNNode()
         _torus.position = SCNVector3Make(_cameraHandle.position.x, 60, 10)
         _torus.geometry = SCNTorus(ringRadius: W/2, pipeRadius: W/6)
-        _torus.physicsBody = SCNPhysicsBody(type: .Static, shape: SCNPhysicsShape(geometry: _torus.geometry!, options: [SCNPhysicsShapeTypeKey: SCNPhysicsShapeTypeConcavePolyhedron]))
+        _torus.physicsBody = SCNPhysicsBody(type: .static, shape: SCNPhysicsShape(geometry: _torus.geometry!, options: [.type: SCNPhysicsShape.ShapeType.concavePolyhedron]))
         _torus.opacity = 0.0
         
         // create a splash
@@ -1125,79 +1132,57 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         material.normal.contents = "wood-normal.png"
         
         _scene.rootNode.addChildNode(_torus)
-        _torus.runAction(SCNAction.repeatActionForever(SCNAction.rotateByAngle(CGFloat(M_PI)*2, aroundAxis: SCNVector3Make(0.4, 1, 0), duration: 8)))
+        _torus.runAction(.repeatForever(.rotate(by: .pi*2, around: SCNVector3Make(0.4, 1, 0), duration: 8)))
         
         //preload it to avoid frame drop
-        (self.view as! SCNView).prepareObject(_scene, shouldAbortBlock: nil)
+        (self.view as! SCNView).prepare(_scene, shouldAbortBlock: nil)
         
         _scene.physicsWorld.contactDelegate = self
         
         //setup material
-        let skScene = SKScene(size: CGSizeMake(SPRITE_SIZE, SPRITE_SIZE))
-        skScene.backgroundColor = SKColor.whiteColor()
+        let skScene = SKScene(size: CGSize(width: SPRITE_SIZE, height: SPRITE_SIZE))
+        skScene.backgroundColor = .white
         material.diffuse.contents = skScene
         
+        //tweak physics
+        (self.view as! SCNView).scene!.physicsWorld.gravity = SCNVector3Make(0, -70, 0)
+        
+        // show the torus
         SCNTransaction.begin()
-        SCNTransaction.setAnimationDuration(1.0)
-        SCNTransaction.setCompletionBlock{
-            self.startLaunchingColors()
-        }
-        
+        SCNTransaction.animationDuration = 1.0
         _torus.opacity = 1.0
-        
         SCNTransaction.commit()
     }
     
     
-    private func startLaunchingColors() {
-        //tweak physics
-        (self.view as! SCNView).scene!.physicsWorld.gravity = SCNVector3Make(0, -70, 0)
-        
-        // drop rigid bodies
-        let intervalTime = UInt64(Double(NSEC_PER_SEC) * 0.1)
-        
-        let queue = dispatch_get_main_queue()
-        _timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue)
-        dispatch_source_set_timer(_timer!, dispatch_time(DISPATCH_TIME_NOW, Int64(1 * NSEC_PER_SEC)), intervalTime, 0); // every ms
-        
-        var right = false
-        
-        dispatch_source_set_event_handler(_timer!) {
-            
-            if self._step != 4 {
-                dispatch_source_cancel(self._timer!)
-                return
-            }
-            
-            let ball = SCNNode()
-            let sphere = SCNSphere(radius: 2)
-            ball.geometry = sphere
-            ball.geometry!.firstMaterial!.diffuse.contents = SKColor(hue: CGFloat(rand())/CGFloat(RAND_MAX), saturation: 1, brightness: 1, alpha: 1)
-            ball.geometry!.firstMaterial!.reflective.contents = "envmap.jpg"
-            ball.geometry!.firstMaterial!.fresnelExponent = 1.0
-            ball.physicsBody = SCNPhysicsBody.dynamicBody()
-            ball.physicsBody!.restitution = 0.9
-            ball.physicsBody!.categoryBitMask = 0x4
-            ball.physicsBody!.collisionBitMask = ~(0x4)
-            
-            SCNTransaction.begin()
-            
-            ball.position = SCNVector3Make(self._cameraHandle.position.x, 20, 100)
-            
-            //add to scene
-            self._scene.rootNode.addChildNode(ball)
-            
-            let PAINT_FACTOR: SCNVectorFloat = 2
-            
-            ball.physicsBody!.velocity = SCNVector3Make(PAINT_FACTOR * randFloat(-10, 10),
-                (75+randFloat(0, 35)),
-                PAINT_FACTOR * -30.0)
-            SCNTransaction.commit()
-            
-            right = !right
+    func launchColorBall() {
+        let ball = SCNNode()
+        let sphere = SCNSphere(radius: 2)
+        ball.geometry = sphere
+        let hue = CGFloat(arc4random())/CGFloat(UInt32.max)
+        ball.geometry!.firstMaterial?.diffuse.contents = SKColor(hue: hue, saturation: 1, brightness: 1, alpha: 1)
+        ball.geometry!.firstMaterial?.reflective.contents = "envmap.jpg"
+        ball.geometry!.firstMaterial?.fresnelExponent = 1.0
+        ball.physicsBody = .dynamic()
+        ball.physicsBody!.restitution = 0.9
+        ball.physicsBody!.categoryBitMask = 0x4
+        if #available(OSX 10.11, iOS 9.0, *) {
+            ball.physicsBody!.contactTestBitMask = ~0
         }
-        
-        dispatch_resume(_timer!)
+        ball.physicsBody!.collisionBitMask = ~(0x4)
+        //ball.physicsBody!.contactTestBitMask = 0xff
+    
+        ball.position = SCNVector3Make(_cameraHandle.position.x, 20, 100)
+    
+        //add to scene
+        _scene.rootNode.addChildNode(ball)
+    
+        let PAINT_FACTOR = SCNVectorFloat(2)
+    
+        ball.physicsBody!.velocity = SCNVector3Make(
+            PAINT_FACTOR * randFloat(-10, 10),
+            (75+randFloat(0, 35)),
+            PAINT_FACTOR * -30.0)
     }
     
     private func orderOutSpriteKit() {
@@ -1216,9 +1201,9 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         switch _shaderStage {
         case 1: // Geometry
             SCNTransaction.begin()
-            SCNTransaction.setAnimationDuration(1.0)
-            node.geometry!.shaderModifiers = [SCNShaderModifierEntryPointGeometry: _geomModifier,
-                SCNShaderModifierEntryPointLightingModel: _lightModifier]
+            SCNTransaction.animationDuration = 1.0
+            node.geometry!.shaderModifiers = [.geometry: _geomModifier,
+                .lightingModel: _lightModifier]
             
             node.geometry!.setValue(3.0, forKey: "Amplitude")
             node.geometry!.setValue(0.25, forKey: "Frequency")
@@ -1226,27 +1211,27 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
             SCNTransaction.commit()
         case 2: // Surface
             SCNTransaction.begin()
-            SCNTransaction.setAnimationDuration(0.5)
+            SCNTransaction.animationDuration = 0.5
             node.geometry!.setValue(0.0, forKey: "Amplitude")
-            SCNTransaction.setCompletionBlock{
+            SCNTransaction.completionBlock = {
                 SCNTransaction.begin()
-                SCNTransaction.setAnimationDuration(1.5)
-                node.geometry!.shaderModifiers = [SCNShaderModifierEntryPointSurface: self._surfModifier,
-                    SCNShaderModifierEntryPointLightingModel: self._lightModifier]
+                SCNTransaction.animationDuration = 1.5
+                node.geometry!.shaderModifiers = [.surface: self._surfModifier,
+                    .lightingModel: self._lightModifier]
                 node.geometry!.setValue(1.0, forKey: "surfIntensity")
                 SCNTransaction.commit()
             }
             SCNTransaction.commit()
         case 3: // Fragment
             SCNTransaction.begin()
-            SCNTransaction.setAnimationDuration(0.5)
+            SCNTransaction.animationDuration = 0.5
             
             node.geometry!.setValue(0.0, forKey: "surfIntensity")
-            SCNTransaction.setCompletionBlock{
+            SCNTransaction.completionBlock = {
                 SCNTransaction.begin()
-                SCNTransaction.setAnimationDuration(1.5)
-                node.geometry!.shaderModifiers = [SCNShaderModifierEntryPointFragment: self._fragModifier,
-                    SCNShaderModifierEntryPointLightingModel: self._lightModifier]
+                SCNTransaction.animationDuration = 1.5
+                node.geometry!.shaderModifiers = [.fragment: self._fragModifier,
+                    .lightingModel: self._lightModifier]
                 node.geometry!.setValue(1.0, forKey: "fragIntensity")
                 node.geometry!.setValue(1.0, forKey: "lightIntensity")
                 SCNTransaction.commit()
@@ -1255,11 +1240,11 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
             
         case 4: // None
             SCNTransaction.begin()
-            SCNTransaction.setAnimationDuration(0.5)
+            SCNTransaction.animationDuration = 0.5
             node.geometry!.setValue(0.0, forKey: "fragIntensity")
             node.geometry!.setValue(0.0, forKey: "lightIntensity")
             _shaderStage = 0
-            SCNTransaction.setCompletionBlock{
+            SCNTransaction.completionBlock = {
                 node.geometry!.shaderModifiers = nil
             }
             SCNTransaction.commit()
@@ -1274,9 +1259,9 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         //move the camera back
         //place camera
         SCNTransaction.begin()
-        SCNTransaction.setAnimationDuration(1.0)
+        SCNTransaction.animationDuration = 1.0
         _cameraHandle.position = SCNVector3Make(_cameraHandle.position.x+180, 60, 0)
-        _cameraHandle.eulerAngles = SCNVector3Make(-SCNVectorFloat(M_PI_4)*0.3, 0, 0)
+        _cameraHandle.eulerAngles = SCNVector3Make(-.pi/4*0.3, 0, 0)
         
         _spotLightNode.light!.spotOuterAngle = 55
         SCNTransaction.commit()
@@ -1286,7 +1271,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         _scene.rootNode.addChildNode(_shaderGroupNode!)
         
         //add globe stand
-        let globe = SCNScene(named: "assets.scnassets/models/globe.dae")!.rootNode.childNodeWithName("globe", recursively: true)!
+        let globe = SCNScene(named: "assets.scnassets/models/globe.dae")!.rootNode.childNode(withName: "globe", recursively: true)!
         
         _shaderGroupNode!.addChildNode(globe)
         
@@ -1304,16 +1289,16 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         sphere.firstMaterial!.fresnelExponent = 2
         
         //GEOMETRY
-        let node = globe.childNodeWithName("globeAttach", recursively: true)!
+        let node = globe.childNode(withName: "globeAttach", recursively: true)!
         node.geometry = sphere
         node.scale = SCNVector3Make(3, 3, 3)
         
-        node.runAction(SCNAction.repeatActionForever(SCNAction.rotateByX(0, y: CGFloat(M_PI), z: 0, duration: 6.0)))
+        node.runAction(.repeatForever(.rotateBy(x: 0, y: .pi, z: 0, duration: 6.0)))
         
-        _geomModifier = try! String(contentsOfFile: NSBundle.mainBundle().pathForResource("sm_geom", ofType: "shader")!, encoding: NSUTF8StringEncoding)
-        _surfModifier = try! String(contentsOfFile: NSBundle.mainBundle().pathForResource("sm_surf", ofType: "shader")!, encoding: NSUTF8StringEncoding)
-        _fragModifier = try! String(contentsOfFile: NSBundle.mainBundle().pathForResource("sm_frag", ofType: "shader")!, encoding: NSUTF8StringEncoding)
-        _lightModifier = try! String(contentsOfFile: NSBundle.mainBundle().pathForResource("sm_light", ofType: "shader")!, encoding: NSUTF8StringEncoding)
+        _geomModifier = try! String(contentsOfFile: Bundle.main.path(forResource: "sm_geom", ofType: "shader")!, encoding: .utf8)
+        _surfModifier = try! String(contentsOfFile: Bundle.main.path(forResource: "sm_surf", ofType: "shader")!, encoding: .utf8)
+        _fragModifier = try! String(contentsOfFile: Bundle.main.path(forResource: "sm_frag", ofType: "shader")!, encoding: .utf8)
+        _lightModifier = try! String(contentsOfFile: Bundle.main.path(forResource: "sm_light", ofType: "shader")!, encoding: .utf8)
         
         node.geometry!.setValue(0.0, forKey: "Amplitude")
         node.geometry!.setValue(0.0, forKey: "lightIntensity")
@@ -1323,18 +1308,18 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         _shadedNode = node
         
         //redraw forever
-        (self.view as! SCNView).playing = true
+        (self.view as! SCNView).isPlaying = true
         (self.view as! SCNView).loops = true
     }
     
     private func orderOutShaders() {
-        _shaderGroupNode?.runAction(SCNAction.sequence([SCNAction.scaleTo(0.01, duration: 1.0), SCNAction.removeFromParentNode()]))
+        _shaderGroupNode?.runAction(.sequence([.scale(to: 0.01, duration: 1.0), .removeFromParentNode()]))
         _shaderGroupNode = nil
     }
     
     //MARK: - Presentation logic
     
-    private func presentStep(step: Int) {
+    private func presentStep(_ step: Int) {
         let overlay = (self.view as! SCNView).overlaySKScene as! AAPLSpriteKitOverlayScene
         
         if _cameraHandleTransforms[step].m11 == 0 {
@@ -1345,18 +1330,18 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         switch step {
         case 1:
             overlay.showLabel("Physics")
-            overlay.runAction(SKAction.sequence([SKAction.waitForDuration(2), SKAction.runBlock{
+            overlay.run(.sequence([.wait(forDuration: 2), .run{
                 if self._step == 1 {
                     overlay.showLabel(nil)
                 }
                 }]))
             
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(0 * NSEC_PER_SEC)), dispatch_get_main_queue()) {
+            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.0) {
                 self.showPhysicsSlide()
             }
         case 2:
             overlay.showLabel("Particles")
-            overlay.runAction(SKAction.sequence([SKAction.waitForDuration(4), SKAction.runBlock{
+            overlay.run(.sequence([.wait(forDuration: 4), .run{
                 if self._step == 2 {
                     overlay.showLabel(nil)
                 }
@@ -1365,7 +1350,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
             self.showParticlesSlide()
         case 3:
             overlay.showLabel("Physics Fields")
-            overlay.runAction(SKAction.sequence([SKAction.waitForDuration(2), SKAction.runBlock{
+            overlay.run(.sequence([.wait(forDuration: 2), .run{
                 if self._step == 3 {
                     overlay.showLabel(nil)
                 }
@@ -1374,7 +1359,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
             self.showPhysicsFields()
         case 4:
             overlay.showLabel("SceneKit + SpriteKit")
-            overlay.runAction(SKAction.sequence([SKAction.waitForDuration(4), SKAction.runBlock{
+            overlay.run(.sequence([.wait(forDuration: 4), .run{
                 if self._step == 4 {
                     overlay.showLabel(nil)
                 }
@@ -1389,7 +1374,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         }
     }
     
-    private func orderOutStep(step: Int) {
+    private func orderOutStep(_ step: Int) {
         switch step {
         case 1:
             self.orderOutPhysics()
@@ -1425,8 +1410,8 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         _step -= 1
         
         SCNTransaction.begin()
-        SCNTransaction.setAnimationDuration(0.75)
-        SCNTransaction.setCompletionBlock{
+        SCNTransaction.animationDuration = 0.75
+        SCNTransaction.completionBlock = {
             self.presentStep(self._step)
         }
         
@@ -1438,7 +1423,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
     
     //MARK: - Rendering Loop
     
-    func renderer(renderer: SCNSceneRenderer, updateAtTime time: NSTimeInterval) {
+    func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
         if _step == 2 && _hitFire {
             var fire = _fire.birthRate
             
@@ -1453,6 +1438,19 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
                 }
                 
                 _smoke.birthRate = max(0,smoke)
+            }
+        }
+        
+        
+        if _step == 4 { //launch color at some interval
+            struct My {
+                static var lastTime: TimeInterval = 0
+            }
+            
+            if time - My.lastTime > 0.1 {
+                My.lastTime = time
+                
+                self.launchColorBall()
             }
         }
     }
@@ -1471,37 +1469,37 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
     }
     
     #if os(iOS)
-    @objc func handleDoubleTap(gestureRecognizer: UIGestureRecognizer) {
-    self.restoreCameraAngle()
+    @objc func handleDoubleTap(_ gestureRecognizer: UIGestureRecognizer) {
+        self.restoreCameraAngle()
     }
     
-    @objc func handlePan(gestureRecognizer: UIPanGestureRecognizer) { //###
-    if gestureRecognizer.state == .Ended {
-    self.gestureDidEnd()
-    return
+    @objc func handlePan(_ gestureRecognizer: UIPanGestureRecognizer) { //###
+        if gestureRecognizer.state == .ended {
+            self.gestureDidEnd()
+            return
+        }
+        
+        if gestureRecognizer.state == .began {
+            self.gestureDidBegin()
+            return
+        }
+        
+        if gestureRecognizer.numberOfTouches == 2 {
+            self.tiltCameraWithOffset(gestureRecognizer.translation(in: self.view))
+            
+        } else {
+            let p = gestureRecognizer.location(in: self.view)
+            self.handlePanAtPoint(p)
+        }
     }
     
-    if gestureRecognizer.state == .Began {
-    self.gestureDidBegin()
-    return
-    }
-    
-    if gestureRecognizer.numberOfTouches() == 2 {
-    self.tiltCameraWithOffset(gestureRecognizer.translationInView(self.view))
-    
-    } else {
-    let p = gestureRecognizer.locationInView(self.view)
-    self.handlePanAtPoint(p)
-    }
-    }
-    
-    @objc func handleTap(gestureRecognizer: UIGestureRecognizer) {
-    let p = gestureRecognizer.locationInView(self.view)
-    self.handleTapAtPoint(p)
+    @objc func handleTap(_ gestureRecognizer: UIGestureRecognizer) {
+        let p = gestureRecognizer.location(in: self.view)
+        self.handleTapAtPoint(p)
     }
     #endif
     
-    func handlePanAtPoint(p: CGPoint) {
+    func handlePanAtPoint(_ p: CGPoint) {
         let scnView = self.view as! SCNView
         
         if _step == 2 {
@@ -1516,7 +1514,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
             var angle = atan2(dy, dx)
             
             
-            angle -= 35.0*SCNVectorFloat(M_PI)/180.0; //handle is 35 degree by default
+            angle -= 35.0 * .pi / 180.0; //handle is 35 degree by default
             
             //clamp
             let MIN_ANGLE = -SCNVectorFloat(M_PI_2)*0.1
@@ -1525,15 +1523,15 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
             if angle > MAX_ANGLE {angle = MAX_ANGLE}
             
             
-            let HIT_DELAY: UInt64 = 3
+            let HIT_DELAY: Double = 3
             
             if angle <= 0.66 && angle >= 0.48 {
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(HIT_DELAY * NSEC_PER_SEC)), dispatch_get_main_queue()) {
+                DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + HIT_DELAY) {
                     //hit the fire!
                     self._hitFire = true
                 }
             } else {
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(HIT_DELAY * NSEC_PER_SEC)), dispatch_get_main_queue()) {
+                DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + HIT_DELAY) {
                     //hit the fire!
                     self._hitFire = false
                 }
@@ -1544,33 +1542,33 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         
         if _step == 3 {
             //bubbles
-            self.moveEmitterTo(p)
+            self.moveEmitter(to: p)
         }
     }
     
-    func handleDoubleTapAtPoint(p: CGPoint) {
+    func handleDoubleTapAtPoint(_ p: CGPoint) {
         self.restoreCameraAngle()
     }
     
-    private func preventAccidentalNext(delay: CGFloat) {
+    private func preventAccidentalNext(_ delay: TimeInterval) {
         _preventNext = true
         
         //disable the next button for "delay" seconds to prevent accidental tap
         let overlay = (self.view as! SCNView).overlaySKScene as! AAPLSpriteKitOverlayScene
-        overlay.nextButton.runAction(SKAction.fadeAlphaBy(-0.5, duration: 0.5))
-        overlay.previousButton.runAction(SKAction.fadeAlphaBy(-0.5, duration: 0.5))
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(delay * CGFloat(NSEC_PER_SEC))), dispatch_get_main_queue()) {
+        overlay.nextButton.run(.fadeAlpha(by: -0.5, duration: 0.5))
+        overlay.previousButton.run(.fadeAlpha(by: -0.5, duration: 0.5))
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + delay) {
             self._preventNext = false
-            overlay.previousButton.runAction(SKAction.fadeAlphaTo(self._step > 1 ? 1 : 0, duration: 0.75))
-            overlay.nextButton.runAction(SKAction.fadeAlphaTo(self._introductionStep == 0 && self._step < 5 ? 1 : 0, duration: 0.75))
+            overlay.previousButton.run(.fadeAlpha(to: self._step > 1 ? 1 : 0, duration: 0.75))
+            overlay.nextButton.run(.fadeAlpha(to: self._introductionStep == 0 && self._step < 5 ? 1 : 0, duration: 0.75))
         }
     }
     
-    func handleTapAtPoint(p: CGPoint) {
+    func handleTapAtPoint(_ p: CGPoint) {
         //test buttons
         let skScene = (self.view as! SCNView).overlaySKScene!
-        let p2D = skScene.convertPointFromView(p)
-        let node = skScene.nodeAtPoint(p2D)
+        let p2D = skScene.convertPoint(fromView: p)
+        let node = skScene.atPoint(p2D)
         
         // wait X seconds before enabling the next tap to avoid accidental tap
         let ignoreNext = _preventNext
@@ -1590,7 +1588,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
                 
                 if  node.name == "next" {
                     (node as! SKSpriteNode).color = SKColor(red: 1, green: 0, blue: 0, alpha: 1)
-                    node.runAction(SKAction.customActionWithDuration(0.7) {node, elapsedTime in
+                    node.run(.customAction(withDuration: 0.7) {node, elapsedTime in
                         (node as! SKSpriteNode).colorBlendFactor = 0.7 - elapsedTime
                         })
                 }
@@ -1622,7 +1620,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         }
         if _step == 3 {
             //bubbles
-            self.moveEmitterTo(p)
+            self.moveEmitter(to: p)
         }
         
         if _step == 5 {
@@ -1650,31 +1648,31 @@ class AAPLSpriteKitOverlayScene: SKScene {
         super.init(size: size)
         
         /* Setup your scene here */
-        self.anchorPoint = CGPointMake(0.5, 0.5)
-        self.scaleMode = .ResizeFill
+        self.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+        self.scaleMode = .resizeFill
         
         var marginY: CGFloat = 60
-        var maringX: CGFloat = -60
+        let maringX: CGFloat = -60
         #if os(iOS)
-            if UIDevice.currentDevice().userInterfaceIdiom == .Phone {
+            if UIDevice.current.userInterfaceIdiom == .phone {
                 marginY = 30
                 marginY = 30 //###???
             }
         #endif
         
-        nextButton.position = CGPointMake(size.width * 0.5 + maringX, -size.height * 0.5 + marginY)
+        nextButton.position = CGPoint(x: size.width * 0.5 + maringX, y: -size.height * 0.5 + marginY)
         nextButton.name = "next"
         nextButton.alpha = 0.01
         #if os(iOS)
-            if UIDevice.currentDevice().userInterfaceIdiom == .Phone {
+            if UIDevice.current.userInterfaceIdiom == .phone {
                 nextButton.xScale = 0.5
                 nextButton.yScale = 0.5
             }
         #endif
         self.addChild(nextButton)
         
-        previousButton = SKSpriteNode(color: SKColor.clearColor(), size: nextButton.frame.size)
-        previousButton.position = CGPointMake(-(size.width * 0.5 + maringX), -size.height * 0.5 + marginY)
+        previousButton = SKSpriteNode(color: SKColor.clear, size: nextButton.frame.size)
+        previousButton.position = CGPoint(x: -(size.width * 0.5 + maringX), y: -size.height * 0.5 + marginY)
         previousButton.name = "back"
         previousButton.alpha = 0.01
         self.addChild(previousButton)
@@ -1684,27 +1682,27 @@ class AAPLSpriteKitOverlayScene: SKScene {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func showLabel(label: String?) {
+    func showLabel(_ label: String?) {
         if _label == nil {
             _label = SKLabelNode(fontNamed: "Myriad Set")
             if _label == nil {
                 _label = SKLabelNode(fontNamed: "Avenir-Heavy")
             }
             _label!.fontSize = 140
-            _label!.position = CGPointMake(0,0)
+            _label!.position = CGPoint(x: 0, y: 0)
             
             self.addChild(_label!)
         } else {
             if label != nil {
-                _label!.position = CGPointMake(0, _size.height * 0.25)
+                _label!.position = CGPoint(x: 0, y: _size.height * 0.25)
             }
         }
         
         if label == nil {
-            _label!.runAction(SKAction.fadeOutWithDuration(0.5))
+            _label!.run(.fadeOut(withDuration: 0.5))
         } else {
             #if os(iOS)
-                if UIDevice.currentDevice().userInterfaceIdiom == .Phone {
+                if UIDevice.current.userInterfaceIdiom == .phone {
                     _label!.fontSize = label!.characters.count > 10 ? 50 : 80
                 } else {
                     _label!.fontSize = label!.characters.count > 10 ? 100 : 140
@@ -1715,7 +1713,7 @@ class AAPLSpriteKitOverlayScene: SKScene {
             
             _label!.text = label
             _label!.alpha = 0.0
-            _label!.runAction(SKAction.sequence([SKAction.waitForDuration(0.5), SKAction.fadeInWithDuration(0.5)]))
+            _label!.run(.sequence([.wait(forDuration: 0.5), .fadeIn(withDuration: 0.5)]))
         }
     }
     

@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2015 Apple Inc. All Rights Reserved.
+ Copyright (C) 2017 Apple Inc. All Rights Reserved.
  See LICENSE.txt for this sample’s licensing information
  
  Abstract:
@@ -326,8 +326,9 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
     wallNode.physicsBody.restitution = 1.0;
     wallNode.physicsBody.categoryBitMask = 1 << 2;
     wallNode.castsShadow = NO;
+    wallNode.physicsBody.contactTestBitMask = ~0;
     
-    wallNode.position = SCNVector3Make(0, 100, 40);
+    wallNode.position = SCNVector3Make(0, 100, 0);
     wallNode.rotation = SCNVector4Make(0, 1, 0, M_PI);
     [_scene.rootNode addChildNode:wallNode];
     
@@ -924,7 +925,7 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
     p3d.z = 50;
     p3d.y = MAX(p3d.y, 5);
     _fieldOwner.position = p3d;
-    _fieldOwner.physicsField.strength = 200000.0;
+    _fieldOwner.physicsField.strength = 10000.0;
 }
 
 
@@ -1029,6 +1030,9 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
         [node addChild:subNode];
         [skScene addChild:node];
         
+        //remove color splash at some point
+        [node runAction:[SKAction sequence:@[[SKAction waitForDuration:5], [SKAction removeFromParent]]]];
+        
         if (p.x < 16) {
             node = [node copy];
             p.x = SPRITE_SIZE + p.x;
@@ -1060,10 +1064,6 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
     }
     
     if (ball) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [ball removeFromParentNode];
-        });
-        
         SCNParticleSystem *plokCopy = [_plok copy];
         plokCopy.particleImage = _plok.particleImage; // to workaround an bug in seed #1
         plokCopy.particleColor = ball.geometry.firstMaterial.diffuse.contents;
@@ -1102,6 +1102,8 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
                 
             }
         }
+        
+        [ball removeFromParentNode];
     }
 }
 
@@ -1152,68 +1154,41 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
     skScene.backgroundColor = [SKColor whiteColor];
     material.diffuse.contents = skScene;
     
+    //tweak physics
+    ((SCNView*)self.view).scene.physicsWorld.gravity = SCNVector3Make(0, -70, 0);
+
+    // show the torus
     [SCNTransaction begin];
     [SCNTransaction setAnimationDuration:1.0];
-    [SCNTransaction setCompletionBlock:^{
-        [self startLaunchingColors];
-    }];
-    
     _torus.opacity = 1.0;
-    
     [SCNTransaction commit];
 }
 
-
-- (void)startLaunchingColors
+- (void)launchColorBall
 {
-    //tweak physics
-    ((SCNView*)self.view).scene.physicsWorld.gravity = SCNVector3Make(0, -70, 0);
+    SCNNode *ball = [SCNNode node];
+    SCNSphere *sphere = [SCNSphere sphereWithRadius:2];
+    ball.geometry = sphere;
+    ball.geometry.firstMaterial.diffuse.contents = [SKColor colorWithHue:rand()/(float)RAND_MAX saturation:1 brightness:1 alpha:1];
+    ball.geometry.firstMaterial.reflective.contents = @"envmap.jpg";
+    ball.geometry.firstMaterial.fresnelExponent = 1.0;
+    ball.physicsBody = [SCNPhysicsBody dynamicBody];
+    ball.physicsBody.restitution = 0.9;
+    ball.physicsBody.categoryBitMask = 0x4;
+    ball.physicsBody.contactTestBitMask = ~0;
+    ball.physicsBody.collisionBitMask = ~(0x4);
+    ball.physicsBody.contactTestBitMask = 0xff;
     
-    // drop rigid bodies
-    uint64_t intervalTime = NSEC_PER_SEC * 0.1;
+    ball.position = SCNVector3Make(_cameraHandle.position.x, 20, 100);
     
-    dispatch_queue_t queue = dispatch_get_main_queue();
-    _timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
-    dispatch_source_set_timer(_timer, dispatch_time(DISPATCH_TIME_NOW, 1.0 * NSEC_PER_SEC), intervalTime, 0); // every ms
+    //add to scene
+    [_scene.rootNode addChildNode:ball];
     
-    __block BOOL right = NO;
-    
-    dispatch_source_set_event_handler(_timer, ^{
-        
-        if (_step != 4) {
-            dispatch_source_cancel(_timer);
-            return;
-        }
-        
-        SCNNode *ball = [SCNNode node];
-        SCNSphere *sphere = [SCNSphere sphereWithRadius:2];
-        ball.geometry = sphere;
-        ball.geometry.firstMaterial.diffuse.contents = [SKColor colorWithHue:rand()/(float)RAND_MAX saturation:1 brightness:1 alpha:1];
-        ball.geometry.firstMaterial.reflective.contents = @"envmap.jpg";
-        ball.geometry.firstMaterial.fresnelExponent = 1.0;
-        ball.physicsBody = [SCNPhysicsBody dynamicBody];
-        ball.physicsBody.restitution = 0.9;
-        ball.physicsBody.categoryBitMask = 0x4;
-        ball.physicsBody.collisionBitMask = ~(0x4);
-        
-        [SCNTransaction begin];
-        
-        ball.position = SCNVector3Make(_cameraHandle.position.x, 20, 100);
-        
-        //add to scene
-        [_scene.rootNode addChildNode:ball];
-        
 #define PAINT_FACTOR 2
-        
-        [ball.physicsBody setVelocity:SCNVector3Make(PAINT_FACTOR * randFloat(-10, 10),
-                                                     (75+randFloat(0, 35)),
-                                                     PAINT_FACTOR * -30.0)];
-        [SCNTransaction commit];
-        
-        right = 1-right;
-    });
     
-    dispatch_resume(_timer);
+    [ball.physicsBody setVelocity:SCNVector3Make(PAINT_FACTOR * randFloat(-10, 10),
+                                                 (75+randFloat(0, 35)),
+                                                 PAINT_FACTOR * -30.0)];
 }
 
 - (void)orderOutSpriteKit
@@ -1493,6 +1468,17 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
                 smoke -= 0.03;
             
             _smoke.birthRate = MAX(0,smoke);
+        }
+    }
+    
+    
+    if(_step == 4){ //launch color at some interval
+        static NSTimeInterval lastTime = 0;
+        
+        if(time - lastTime > 0.1){
+            lastTime = time;
+            
+            [self launchColorBall];
         }
     }
 }

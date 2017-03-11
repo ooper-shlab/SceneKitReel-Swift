@@ -78,22 +78,17 @@
 		94EC4F9E192CF091000CEF75 /* splash.png in Resources */ = {isa = PBXBuildFile; fileRef = 94EC4F9C192CF091000CEF75 /* splash.png */; };
 		94F345FA191B9D4F003C1A65 /* wallPaper.png in Resources */ = {isa = PBXBuildFile; fileRef = 94F345F9191B9D4F003C1A65 /* wallPaper.png */; };
 		94F345FB191B9D4F003C1A65 /* wallPaper.png in Resources */ = {isa = PBXBuildFile; fileRef = 94F345F9191B9D4F003C1A65 /* wallPaper.png */; };
-		9CB0B3E1192D45B100F6FA56 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9CB0B3D8192D458100F6FA56 /* AppKit.framework */; };
-		9CB0B3E2192D45BD00F6FA56 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9CB0B3D9192D458100F6FA56 /* QuartzCore.framework */; };
-		9CB0B3E3192D45BD00F6FA56 /* SceneKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9CB0B3DA192D458100F6FA56 /* SceneKit.framework */; };
-		9CB0B3E4192D45BD00F6FA56 /* SpriteKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9CB0B3DB192D458100F6FA56 /* SpriteKit.framework */; };
 		B57220DF1BE369DD00F72F71 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B57220DD1BE369DD00F72F71 /* LaunchScreen.storyboard */; };
 		B57220E21BE36B1200F72F71 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B57220E01BE36B1200F72F71 /* Main.storyboard */; };
-		D73E60161C1C0D010080DA17 /* AAPLGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D73E60141C1C0C060080DA17 /* AAPLGameView.swift */; };
-		D73E601E1C1C466E0080DA17 /* GenericArithmetic.swift in Sources */ = {isa = PBXBuildFile; fileRef = D73E601D1C1C466E0080DA17 /* GenericArithmetic.swift */; };
-		D73E601F1C1C466E0080DA17 /* GenericArithmetic.swift in Sources */ = {isa = PBXBuildFile; fileRef = D73E601D1C1C466E0080DA17 /* GenericArithmetic.swift */; };
-		D73E60231C1C81690080DA17 /* AAPLAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D73E60221C1C81690080DA17 /* AAPLAppDelegate.swift */; };
-		D73E60251C1C82290080DA17 /* AAPLAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D73E60241C1C82290080DA17 /* AAPLAppDelegate.swift */; };
-		D7982A3F1C185724001945A3 /* AAPLGameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7982A3E1C185724001945A3 /* AAPLGameViewController.swift */; };
-		D7982A401C185724001945A3 /* AAPLGameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7982A3E1C185724001945A3 /* AAPLGameViewController.swift */; };
+		D797D2AE1E7385C60028F651 /* AAPLGameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D797D2AD1E7385C60028F651 /* AAPLGameViewController.swift */; };
+		D797D2B01E7385D20028F651 /* AAPLAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D797D2AF1E7385D20028F651 /* AAPLAppDelegate.swift */; };
+		D797D2B41E7386620028F651 /* AAPLGameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D797D2AD1E7385C60028F651 /* AAPLGameViewController.swift */; };
+		D797D2BA1E7388110028F651 /* AAPLGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D797D2B51E73867D0028F651 /* AAPLGameView.swift */; };
+		D797D2BB1E7388170028F651 /* AAPLAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D797D2B61E73867D0028F651 /* AAPLAppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		30926D5F1E6624390024A412 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		94005C04192E6901003CDBCF /* wood.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = wood.png; sourceTree = "<group>"; };
 		94005C07192E69BF003CDBCF /* SceneKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SceneKit.framework; path = System/Library/Frameworks/SceneKit.framework; sourceTree = SDKROOT; };
 		94005C09192E69C3003CDBCF /* SpriteKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SpriteKit.framework; path = System/Library/Frameworks/SpriteKit.framework; sourceTree = SDKROOT; };
@@ -137,20 +132,19 @@
 		94E3A7A1190DB326009BFA76 /* MainMenu.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
 		94EC4F9C192CF091000CEF75 /* splash.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = splash.png; sourceTree = "<group>"; };
 		94F345F9191B9D4F003C1A65 /* wallPaper.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = wallPaper.png; sourceTree = "<group>"; };
-		9CB0B3D8192D458100F6FA56 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/AppKit.framework; sourceTree = DEVELOPER_DIR; };
-		9CB0B3D9192D458100F6FA56 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/QuartzCore.framework; sourceTree = DEVELOPER_DIR; };
-		9CB0B3DA192D458100F6FA56 /* SceneKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SceneKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/SceneKit.framework; sourceTree = DEVELOPER_DIR; };
-		9CB0B3DB192D458100F6FA56 /* SpriteKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SpriteKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/SpriteKit.framework; sourceTree = DEVELOPER_DIR; };
 		B57220DE1BE369DD00F72F71 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		B57220E11BE36B1200F72F71 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		D7327CC31C1AFFEA005D016E /* LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
-		D7327CC41C1AFFEA005D016E /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		D73E60141C1C0C060080DA17 /* AAPLGameView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AAPLGameView.swift; sourceTree = "<group>"; };
-		D73E601D1C1C466E0080DA17 /* GenericArithmetic.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = GenericArithmetic.swift; path = "SceneKitReel-OSX/GenericArithmetic.swift"; sourceTree = SOURCE_ROOT; };
-		D73E60221C1C81690080DA17 /* AAPLAppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AAPLAppDelegate.swift; sourceTree = "<group>"; };
-		D73E60241C1C82290080DA17 /* AAPLAppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AAPLAppDelegate.swift; sourceTree = "<group>"; };
-		D73E60261C1C97BB0080DA17 /* README2.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README2.md; sourceTree = "<group>"; };
-		D7982A3E1C185724001945A3 /* AAPLGameViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AAPLGameViewController.swift; sourceTree = "<group>"; };
+		D70D6C121E7406AF00FE5014 /* LICENSE.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
+		D70D6C131E7406AF00FE5014 /* README2.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README2.md; sourceTree = "<group>"; };
+		D797D2AD1E7385C60028F651 /* AAPLGameViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AAPLGameViewController.swift; sourceTree = "<group>"; };
+		D797D2AF1E7385D20028F651 /* AAPLAppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AAPLAppDelegate.swift; sourceTree = "<group>"; };
+		D797D2B51E73867D0028F651 /* AAPLGameView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AAPLGameView.swift; sourceTree = "<group>"; };
+		D797D2B61E73867D0028F651 /* AAPLAppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AAPLAppDelegate.swift; sourceTree = "<group>"; };
+		D797D2BD1E738D1B0028F651 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/System/Library/Frameworks/AppKit.framework; sourceTree = DEVELOPER_DIR; };
+		D797D2BF1E738D3C0028F651 /* libswiftAppKit.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libswiftAppKit.tbd; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/System/Library/PrivateFrameworks/Swift/libswiftAppKit.tbd; sourceTree = DEVELOPER_DIR; };
+		D797D2C11E738D550028F651 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		D797D2C31E738D7C0028F651 /* libswiftDispatch.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libswiftDispatch.tbd; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/System/Library/PrivateFrameworks/Swift/libswiftDispatch.tbd; sourceTree = DEVELOPER_DIR; };
+		D797D2C51E738D970028F651 /* libswiftFoundation.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libswiftFoundation.tbd; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/System/Library/PrivateFrameworks/Swift/libswiftFoundation.tbd; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -167,10 +161,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9CB0B3E1192D45B100F6FA56 /* AppKit.framework in Frameworks */,
-				9CB0B3E2192D45BD00F6FA56 /* QuartzCore.framework in Frameworks */,
-				9CB0B3E3192D45BD00F6FA56 /* SceneKit.framework in Frameworks */,
-				9CB0B3E4192D45BD00F6FA56 /* SpriteKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -180,15 +170,16 @@
 		9409C200190A7465008EF25B = {
 			isa = PBXGroup;
 			children = (
-				D7327CC31C1AFFEA005D016E /* LICENSE.txt */,
-				D7327CC41C1AFFEA005D016E /* README.md */,
-				D73E60261C1C97BB0080DA17 /* README2.md */,
+				D70D6C121E7406AF00FE5014 /* LICENSE.txt */,
+				30926D5F1E6624390024A412 /* README.md */,
+				D70D6C131E7406AF00FE5014 /* README2.md */,
 				94005C09192E69C3003CDBCF /* SpriteKit.framework */,
 				94005C07192E69BF003CDBCF /* SceneKit.framework */,
 				9CF7785A192D11860041C3B0 /* Shared */,
 				9409C20B190A7465008EF25B /* iOS */,
 				94E3A78F190DB326009BFA76 /* OS X */,
 				9409C20A190A7465008EF25B /* Products */,
+				D797D2BC1E738D1B0028F651 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -204,7 +195,7 @@
 		9409C20B190A7465008EF25B /* iOS */ = {
 			isa = PBXGroup;
 			children = (
-				D73E60241C1C82290080DA17 /* AAPLAppDelegate.swift */,
+				D797D2AF1E7385D20028F651 /* AAPLAppDelegate.swift */,
 				B57220E01BE36B1200F72F71 /* Main.storyboard */,
 				B57220DD1BE369DD00F72F71 /* LaunchScreen.storyboard */,
 				9409C220190A7465008EF25B /* Images.xcassets */,
@@ -306,8 +297,8 @@
 		94E3A78F190DB326009BFA76 /* OS X */ = {
 			isa = PBXGroup;
 			children = (
-				D73E60221C1C81690080DA17 /* AAPLAppDelegate.swift */,
-				D73E60141C1C0C060080DA17 /* AAPLGameView.swift */,
+				D797D2B61E73867D0028F651 /* AAPLAppDelegate.swift */,
+				D797D2B51E73867D0028F651 /* AAPLGameView.swift */,
 				94E3A7A1190DB326009BFA76 /* MainMenu.xib */,
 				9CB0B3E0192D459800F6FA56 /* Linked Frameworks */,
 				94E3A790190DB326009BFA76 /* Supporting Files */,
@@ -328,10 +319,6 @@
 		9CB0B3E0192D459800F6FA56 /* Linked Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				9CB0B3D8192D458100F6FA56 /* AppKit.framework */,
-				9CB0B3D9192D458100F6FA56 /* QuartzCore.framework */,
-				9CB0B3DA192D458100F6FA56 /* SceneKit.framework */,
-				9CB0B3DB192D458100F6FA56 /* SpriteKit.framework */,
 			);
 			name = "Linked Frameworks";
 			path = ..;
@@ -340,12 +327,23 @@
 		9CF7785A192D11860041C3B0 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
-				D7982A3E1C185724001945A3 /* AAPLGameViewController.swift */,
-				D73E601D1C1C466E0080DA17 /* GenericArithmetic.swift */,
+				D797D2AD1E7385C60028F651 /* AAPLGameViewController.swift */,
 				944D9CCB190A85CB00ACBE6F /* Resources */,
 			);
 			name = Shared;
 			path = SceneKitReel;
+			sourceTree = "<group>";
+		};
+		D797D2BC1E738D1B0028F651 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D797D2C51E738D970028F651 /* libswiftFoundation.tbd */,
+				D797D2C31E738D7C0028F651 /* libswiftDispatch.tbd */,
+				D797D2C11E738D550028F651 /* Foundation.framework */,
+				D797D2BF1E738D3C0028F651 /* libswiftAppKit.tbd */,
+				D797D2BD1E738D1B0028F651 /* AppKit.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -391,8 +389,14 @@
 		9409C201190A7465008EF25B /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0720;
+				LastUpgradeCheck = 0820;
 				ORGANIZATIONNAME = apple;
+				TargetAttributes = {
+					9409C208190A7465008EF25B = {
+						LastSwiftMigration = 0820;
+						ProvisioningStyle = Automatic;
+					};
+				};
 			};
 			buildConfigurationList = 9409C204190A7465008EF25B /* Build configuration list for PBXProject "SceneKitReel" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -506,9 +510,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D73E60251C1C82290080DA17 /* AAPLAppDelegate.swift in Sources */,
-				D7982A3F1C185724001945A3 /* AAPLGameViewController.swift in Sources */,
-				D73E601E1C1C466E0080DA17 /* GenericArithmetic.swift in Sources */,
+				D797D2B01E7385D20028F651 /* AAPLAppDelegate.swift in Sources */,
+				D797D2AE1E7385C60028F651 /* AAPLGameViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -516,10 +519,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D7982A401C185724001945A3 /* AAPLGameViewController.swift in Sources */,
-				D73E60161C1C0D010080DA17 /* AAPLGameView.swift in Sources */,
-				D73E60231C1C81690080DA17 /* AAPLAppDelegate.swift in Sources */,
-				D73E601F1C1C466E0080DA17 /* GenericArithmetic.swift in Sources */,
+				D797D2B41E7386620028F651 /* AAPLGameViewController.swift in Sources */,
+				D797D2BB1E7388170028F651 /* AAPLAppDelegate.swift in Sources */,
+				D797D2BA1E7388110028F651 /* AAPLGameView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -576,14 +578,19 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
@@ -619,13 +626,18 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
 				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
@@ -634,6 +646,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				SDKROOT = iphoneos.internal;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TOOLCHAINS = default;
 				VALIDATE_PRODUCT = YES;
@@ -645,8 +658,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEVELOPMENT_TEAM = "";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "SceneKitReel/SceneKitReel-Prefix.pch";
 				INFOPLIST_FILE = "SceneKitReel/SceneKitReel-Info.plist";
@@ -654,8 +667,8 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.apple.scenekit.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -664,8 +677,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEVELOPMENT_TEAM = "";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "SceneKitReel/SceneKitReel-Prefix.pch";
 				INFOPLIST_FILE = "SceneKitReel/SceneKitReel-Info.plist";
@@ -673,7 +686,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.apple.scenekit.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
@@ -681,7 +694,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_MODULES = NO;
 				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "SceneKitReel-OSX/SceneKitReel-OSX-Prefix.pch";
@@ -691,11 +704,12 @@
 				);
 				INFOPLIST_FILE = "SceneKitReel-OSX/SceneKitReel-OSX-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.apple.scenekit.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = "";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -703,17 +717,19 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_MODULES = NO;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "SceneKitReel-OSX/SceneKitReel-OSX-Prefix.pch";
 				INFOPLIST_FILE = "SceneKitReel-OSX/SceneKitReel-OSX-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.apple.scenekit.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = "";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
