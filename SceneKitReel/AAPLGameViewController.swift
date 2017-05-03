@@ -1517,8 +1517,8 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
             angle -= 35.0 * .pi / 180.0; //handle is 35 degree by default
             
             //clamp
-            let MIN_ANGLE = -SCNVectorFloat(M_PI_2)*0.1
-            let MAX_ANGLE = SCNVectorFloat(M_PI)*0.8
+            let MIN_ANGLE = -SCNVectorFloat.pi/2*0.1
+            let MAX_ANGLE = SCNVectorFloat.pi*0.8
             if angle < MIN_ANGLE {angle = MIN_ANGLE}
             if angle > MAX_ANGLE {angle = MAX_ANGLE}
             
