@@ -169,13 +169,13 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
             gestureRecognizers += sceneView.gestureRecognizers ?? []
             
             // add a tap gesture recognizer
-            let tapGesture = UITapGestureRecognizer(target: self, action: #selector(AAPLGameViewController.handleTap(_:)))
+            let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.handleTap(_:)))
             
             // add a pan gesture recognizer
-            let panGesture = UIPanGestureRecognizer(target: self, action: #selector(AAPLGameViewController.handlePan(_:)))
+            let panGesture = UIPanGestureRecognizer(target: self, action: #selector(self.handlePan(_:)))
             
             // add a double tap gesture recognizer
-            let doubleTapGesture = UITapGestureRecognizer(target: self, action: #selector(AAPLGameViewController.handleDoubleTap(_:)))
+            let doubleTapGesture = UITapGestureRecognizer(target: self, action: #selector(self.handleDoubleTap(_:)))
             doubleTapGesture.numberOfTapsRequired = 2
             
             tapGesture.require(toFail: panGesture)
@@ -762,7 +762,7 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         _timer = DispatchSource.makeTimerSource(flags: [], queue: queue)
 //        _timer!.setTimer(start: DispatchTime.now() + Double(Int64(NSEC_PER_SEC)) / Double(NSEC_PER_SEC), interval: intervalTime, leeway: 0); // every ms
         //DispatchTimeInterval
-        _timer!.scheduleRepeating(deadline: DispatchTime.now() + 1.0, interval: .nanoseconds(intervalTime), leeway: .seconds(0)) // every ms
+        _timer!.schedule(deadline: DispatchTime.now() + 1.0, repeating: .nanoseconds(intervalTime), leeway: .seconds(0)) // every ms
         
         var remainingCount = count
         var right = false
@@ -856,8 +856,8 @@ class AAPLGameViewController: BaseViewController, SCNSceneRendererDelegate, SCNP
         colliderNode.runAction(.sequence([.wait(duration: 2), moveIn]))
         
         let animation = CABasicAnimation(keyPath: "eulerAngles")
-        animation.fromValue = NSValue(scnVector3: SCNVector3Make(0, 0, 0))
-        animation.toValue = NSValue(scnVector3: SCNVector3Make(0, 0, 2 * .pi))
+        animation.fromValue = SCNVector3Make(0, 0, 0)
+        animation.toValue = SCNVector3Make(0, 0, 2 * .pi)
         animation.beginTime = CACurrentMediaTime() + 0.5
         animation.duration = 2
         animation.repeatCount = MAXFLOAT
@@ -1698,23 +1698,23 @@ class AAPLSpriteKitOverlayScene: SKScene {
             }
         }
         
-        if label == nil {
+        guard let label = label else {
             _label!.run(.fadeOut(withDuration: 0.5))
-        } else {
-            #if os(iOS)
-                if UIDevice.current.userInterfaceIdiom == .phone {
-                    _label!.fontSize = label!.characters.count > 10 ? 50 : 80
-                } else {
-                    _label!.fontSize = label!.characters.count > 10 ? 100 : 140
-                }
-            #else
-                _label!.fontSize = label!.characters.count > 10 ? 100 : 140
-            #endif
-            
-            _label!.text = label
-            _label!.alpha = 0.0
-            _label!.run(.sequence([.wait(forDuration: 0.5), .fadeIn(withDuration: 0.5)]))
+            return
         }
+        #if os(iOS)
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            _label!.fontSize = label.count > 10 ? 50 : 80
+        } else {
+            _label!.fontSize = label.count > 10 ? 100 : 140
+        }
+        #else
+        _label!.fontSize = label.count > 10 ? 100 : 140
+        #endif
+        
+        _label!.text = label
+        _label!.alpha = 0.0
+        _label!.run(.sequence([.wait(forDuration: 0.5), .fadeIn(withDuration: 0.5)]))
     }
     
 }
